@@ -6,12 +6,16 @@ def cubicIntoQuadratics(cubic):
     tdiv = (prec) / ((3 ** 0.5 / 18) * abs(cubic.end - 3 * cubic.control2 + 3 * cubic.control1 - cubic.start) * 0.5)
     tdiv = tdiv ** (1/3)
     if (tdiv >= 1):
-        return (midPointApprox(cubic), )
+        yield midPointApprox(cubic)
     elif (tdiv >= 0.5):
         cubicSplit = splitCubic(cubic, tdiv)
-        return (midPointApprox(cubicSplit[0]), midPointApprox(cubicSplit[1]))
+        yield midPointApprox(cubicSplit[0])
+        yield midPointApprox(cubicSplit[1])
     else:
-        return (midPointApprox(cubicSplit[0]), cubicIntoQuadratics(cubicSplit[1]))
+        cubicSplit = splitCubic(cubic, tdiv)
+        yield midPointApprox(cubicSplit[0])
+        for item in cubicIntoQuadratics(cubicSplit[1]):
+            yield item
 def midPointApprox(cubic): # approximates the cubic into the control point for a quadratic
     return QuadraticBezier(cubic.start, (3 * (cubic.control1 + cubic.control2) - (cubic.start + cubic.end)) / 4, cubic.end)
 def evalCubic(cubic, t): # evals the cubic at the given t
