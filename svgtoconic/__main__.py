@@ -7,17 +7,17 @@ def convert_paths(paths: list[Path]) -> Iterator[Path]:
     for path in paths:
         for seg in path:
             if isinstance(seg, CubicBezier):
-                for item in cubicIntoQuadratics(seg):
+                for item in cubic2quadratic(seg):
                     yield item
             else:
                 # TODO: Handle other types of segments
                 yield seg
 
 
-def cubicIntoQuadratics(cubic: CubicBezier) -> Iterator[QuadraticBezier]:
+def cubic2quadratic(cubic: CubicBezier) -> Iterator[QuadraticBezier]:
     """I don't know how this works but it does"""
 
-    def midPointApprox(cubic: CubicBezier) -> QuadraticBezier:
+    def helper(cubic: CubicBezier) -> QuadraticBezier:
         """approximates the cubic Bezier into the control point for a quadratic"""
         return QuadraticBezier(
             cubic.start,
@@ -33,19 +33,19 @@ def cubicIntoQuadratics(cubic: CubicBezier) -> Iterator[QuadraticBezier]:
     )
     tdiv = tdiv ** (1 / 3)
     if tdiv >= 1:
-        yield midPointApprox(cubic)
+        yield helper(cubic)
     elif tdiv >= 0.5:
-        cubicSplit = splitCubic(cubic, tdiv)
-        yield midPointApprox(cubicSplit[0])
-        yield midPointApprox(cubicSplit[1])
+        cubicSplit = split_cubic(cubic, tdiv)
+        yield helper(cubicSplit[0])
+        yield helper(cubicSplit[1])
     else:
-        cubicSplit = splitCubic(cubic, tdiv)
-        yield midPointApprox(cubicSplit[0])
-        for item in cubicIntoQuadratics(cubicSplit[1]):
+        cubicSplit = split_cubic(cubic, tdiv)
+        yield helper(cubicSplit[0])
+        for item in cubic2quadratic(cubicSplit[1]):
             yield item
 
 
-def evalCubic(cubic: CubicBezier, t: float) -> float:
+def eval_cubic_bezier(cubic: CubicBezier, t: float) -> float:
     """Evaluates the cubic Bezier at the given t."""
     return (
         ((1 - t) ** 3) * cubic.start
@@ -55,33 +55,33 @@ def evalCubic(cubic: CubicBezier, t: float) -> float:
     )
 
 
-def splitCubic(cubic: CubicBezier, t: float) -> tuple[CubicBezier, CubicBezier]:
+def split_cubic(cubic: CubicBezier, t: float) -> tuple[CubicBezier, CubicBezier]:
     """splits the cubic at the given t, using De Casteljau's"""
-    splitPoint = evalCubic(cubic, t)
-    secondPoints = [
+    split_point = eval_cubic_bezier(cubic, t)
+    second_points = [
         cubic.start + t * (cubic.control1 - cubic.start),
         cubic.control1 + t * (cubic.control2 - cubic.control1),
         cubic.control2 + t * (cubic.end - cubic.control2),
     ]
-    thirdPoints = [
-        secondPoints[0] + t * (secondPoints[1] - secondPoints[0]),
-        secondPoints[1] + t * (secondPoints[2] - secondPoints[1]),
+    third_points = [
+        second_points[0] + t * (second_points[1] - second_points[0]),
+        second_points[1] + t * (second_points[2] - second_points[1]),
     ]
     return (
-        CubicBezier(cubic.start, secondPoints[0], thirdPoints[0], splitPoint),
-        CubicBezier(splitPoint, thirdPoints[1], secondPoints[2], cubic.end),
+        CubicBezier(cubic.start, second_points[0], third_points[0], split_point),
+        CubicBezier(split_point, third_points[1], second_points[2], cubic.end),
     )
 
 
 # Opens the SVG in a new browser window
 if __name__ == "__main__":
     paths, _attribs = svg2paths("goomba.svg")
-    newPath = Path()
+    new_path = Path()
     for path in convert_paths(paths):
-        newPath.append(path)
-    disvg(newPath)
+        new_path.append(path)
+    disvg(new_path)
     constant = Matrix([Symbol("x"), Symbol("y"), 1])
-    for quadratic in newPath:
+    for quadratic in new_path:
         continue
         a, b, c = quadratic.start, quadratic.control, quadratic.end
         u = Matrix(
