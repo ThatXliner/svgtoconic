@@ -1,6 +1,7 @@
 from svgpathtools import *
 from typing import Iterator
 from sympy import *
+import json
 
 
 def convert_paths(paths: list[Path]) -> Iterator[Path]:
@@ -75,23 +76,37 @@ def split_cubic(cubic: CubicBezier, t: float) -> tuple[CubicBezier, CubicBezier]
 
 # Opens the SVG in a new browser window
 if __name__ == "__main__":
-    paths, _attribs = svg2paths("goomba.svg")
+    paths, _attribs = svg2paths("test.svg")
     new_path = Path()
     for path in convert_paths(paths):
         new_path.append(path)
-    disvg(new_path)
+    # disvg(new_path)
     constant = Matrix([Symbol("x"), Symbol("y"), 1])
-    for quadratic in new_path:
-        continue
-        a, b, c = quadratic.start, quadratic.control, quadratic.end
-        u = Matrix(
-            [b.imag - c.imag, c.real - b.real, b.real * c.imag - b.imag - c.real]
+    output = []
+    for i, quadratic in enumerate(new_path):
+        if not isinstance(quadratic, QuadraticBezier):
+            continue
+        p0 = "P_{" + str(i) + "0}"
+        p1 = "P_{" + str(i) + "1}"
+        p2 = "P_{" + str(i) + "2}"
+        output.append(f"{p0} = ({(start := quadratic.start).real}, {start.imag})")
+        output.append(f"{p1} = ({(control := quadratic.control).real}, {control.imag})")
+        output.append(f"{p2} = ({(end := quadratic.end).real}, {end.imag})")
+        output.append(
+            "B_{" + str(i) + "}(t)" + f" = {p1} + (1-t)^2({p0}-{p1})+t^2({p2}-{p1})"
         )
-        v = Matrix(
-            [c.imag - a.imag, a.real - c.real, c.real * a.imag - c.imag * a.real]
-        )
-        w = Matrix(
-            [a.imag - b.imag, b.real - a.real, a.real * b.imag - a.imag * b.real]
-        )
-        q = 2 * (u * w.T + w * u.T) - v * v.T
-        print(simplify((constant.T * q * constant)[0]))
+        output.append("B_{" + str(i) + "}(t)")
+        # a, b, c = quadratic.start, quadratic.control, quadratic.end
+        # u = Matrix(
+        #     [b.imag - c.imag, c.real - b.real, b.real * c.imag - b.imag - c.real]
+        # )
+        # v = Matrix(
+        #     [c.imag - a.imag, a.real - c.real, c.real * a.imag - c.imag * a.real]
+        # )
+        # w = Matrix(
+        #     [a.imag - b.imag, b.real - a.real, a.real * b.imag - a.imag * b.real]
+        # )
+        # q = 2 * (u * w.T + w * u.T) - v * v.T
+        # print(simplify((constant.T * q * constant)[0]))
+print(json.dumps(output))
+# print(len(list(filter(lambda x: isinstance(x, QuadraticBezier), new_path))))
