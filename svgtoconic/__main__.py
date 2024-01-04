@@ -53,7 +53,7 @@ def evalCubic(cubic: CubicBezier, t: float) -> float:
     )
 
 
-def splitCubic(cubic: CubicBezier, t: float):
+def splitCubic(cubic: CubicBezier, t: float) -> tuple[CubicBezier, CubicBezier]:
     """splits the cubic at the given t, using De Casteljau's"""
     splitPoint = evalCubic(cubic, t)
     secondPoints = [
