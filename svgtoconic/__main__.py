@@ -1,12 +1,14 @@
 from svgpathtools import *
 from typing import Iterator
+from sympy import *
 
 
-def convert_path(path: list[Path]) -> Iterator[Path]:
-    for seg in path:
-        if isinstance(seg, CubicBezier):
-            for item in cubicIntoQuadratics(seg):
-                yield item
+def convert_paths(paths: list[Path]) -> Iterator[Path]:
+    for path in paths:
+        for seg in path:
+            if isinstance(seg, CubicBezier):
+                for item in cubicIntoQuadratics(seg):
+                    yield item
         else:
             # TODO: Handle other types of segments
             yield seg
@@ -74,5 +76,16 @@ def splitCubic(cubic: CubicBezier, t: float) -> tuple[CubicBezier, CubicBezier]:
 # Opens the SVG in a new browser window
 if __name__ == "__main__":
     paths, _attribs = svg2paths("test.svg")
-    newPath = Path(*convert_path(paths))
+    newPath = Path()
+    for path in convert_paths(paths):
+        newPath.append(path)
     disvg(newPath)
+    constant = Matrix([Symbol('x'), Symbol('y'), 1])
+    for quadratic in newPath:
+        continue
+        a, b, c = quadratic.start, quadratic.control, quadratic.end
+        u = Matrix([b.imag - c.imag, c.real - b.real, b.real * c.imag - b.imag - c.real])
+        v = Matrix([c.imag - a.imag, a.real - c.real, c.real * a.imag - c.imag * a.real])
+        w = Matrix([a.imag - b.imag, b.real - a.real, a.real * b.imag - a.imag * b.real])
+        q = 2 * (u * w.T  + w * u.T) - v * v.T
+        print(simplify((constant.T * q * constant)[0]))
