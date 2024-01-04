@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Desmos Display</title>
+<!-- Use demoKey -->
+<script src="https://www.desmos.com/api/v1.8/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fda6"></script>
+
+</head>
+<body>
+    <div id="calculator" style="width: 90vw; height: 90vh;"></div>
+    <input type="text" placeholder="JSON output here"/>
+    <button id="submit">Submit</button>
+    <script>
+        let elt = document.getElementById('calculator');
+        let calculator = Desmos.GraphingCalculator(elt);
+        let submitButton = document.getElementById('submit');
+        submitButton.addEventListener('click', () => {
+            let input = document.querySelector('input');
+            const equations = JSON.parse(input.value);
+            for (let i = 0; i < equations.length; i++) {
+                calculator.setExpression({ id: `graph${i}`, latex: equations[i]})
+            }
+        });
+    </script>
+</body>
+</html>
