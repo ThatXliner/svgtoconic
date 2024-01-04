@@ -8,6 +8,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.11"
 svgpathtools = "^1.6.1"
+sympy = "^1.12"
 
 
 [build-system]
